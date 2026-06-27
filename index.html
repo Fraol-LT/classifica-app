@@ -3,67 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Classifica Live</title>
-    <!-- Tailwind CSS per lo stile (caricato da CDN per non avere file extra) -->
+    <title>Colosseum League</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome per le icone -->
+    <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Animazione per i nuovi elementi */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* --- ANIMAZIONI --- */
+
+        /* Animazione di ingresso più fluida (slide up + scale) */
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
         }
+
+        /* Animazione di uscita per l'eliminazione (slide right + fade out) */
+        @keyframes fadeOutRight {
+            from { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+            to { 
+                opacity: 0; 
+                transform: translateX(100%); 
+            }
+        }
+
+        /* Classe base per la riga del giocatore */
         .player-row {
-            animation: fadeIn 0.3s ease-out forwards;
+            /* Applica l'animazione di ingresso */
+            animation: fadeInUp 0.4s ease-out forwards;
+            /* Transizione fluida per l'effetto hover */
+            transition: all 0.2s ease;
+            will-change: transform, opacity;
         }
+
+        /* Effetto quando si passa sopra con il mouse */
+        .player-row:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Classe aggiunta via JS quando si elimina */
+        .player-row.deleting {
+            animation: fadeOutRight 0.4s ease-in forwards;
+        }
+
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans text-slate-800 pb-20">
 
-    <!-- Header Fisso -->
-    <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-10">
+    <!-- Header con il NUOVO LOGO -->
+    <header class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-10 border-b-2 border-yellow-600">
         <div class="max-w-md mx-auto flex items-center justify-between">
-            <h1 class="text-2xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-trophy text-yellow-300"></i> Classifica
-            </h1>
-            <button onclick="resetLeaderboard()" class="text-blue-200 hover:text-white transition" title="Azzera tutto">
+            <div class="flex items-center gap-3">
+                <!-- IMPORTANTE: Il file 'colosseum-logo-nero.jpg' deve essere nella stessa cartella di questo file HTML su GitHub -->
+                <img src="colosseum-logo-nero.jpg" alt="Logo Colosseo" class="h-12 w-12 rounded-full object-cover border-2 border-yellow-500 shadow-sm bg-black">
+                <h1 class="text-xl font-bold tracking-tight text-yellow-100">
+                    Colosseum League
+                </h1>
+            </div>
+            <button onclick="resetLeaderboard()" class="text-slate-400 hover:text-red-400 transition p-2" title="Azzera tutto">
                 <i class="fa-solid fa-rotate-right"></i>
             </button>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto p-4 mt-2">
+    <main class="max-w-md mx-auto p-4 mt-4">
         
         <!-- Form Aggiunta Giocatore -->
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-slate-200">
+        <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 border border-slate-200">
             <form id="add-player-form" class="flex gap-2">
                 <input 
                     type="text" 
                     id="player-name" 
-                    placeholder="Nome giocatore..." 
-                    class="flex-1 bg-slate-100 border-none rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                    placeholder="Nome gladiatore..." 
+                    class="flex-1 bg-slate-100 border-none rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg"
                     required
                     autocomplete="off"
                 >
                 <button 
                     type="submit" 
-                    class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition flex items-center gap-2 shadow-sm"
+                    class="bg-slate-900 text-yellow-100 px-5 py-3 rounded-xl font-bold hover:bg-slate-800 active:scale-95 transition flex items-center gap-2 shadow-sm border border-yellow-600/50"
                 >
-                    <i class="fa-solid fa-plus"></i>
+                    ADD <i class="fa-solid fa-plus"></i>
                 </button>
             </form>
         </div>
 
         <!-- Lista Classifica -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <ul id="leaderboard-list" class="divide-y divide-slate-100">
+        <!-- Ho rimosso 'overflow-hidden' per permettere l'effetto hover shadow -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2">
+            <ul id="leaderboard-list" class="space-y-2">
                 <!-- I giocatori verranno inseriti qui da JavaScript -->
             </ul>
             <div id="empty-state" class="p-8 text-center text-slate-400 hidden">
-                <i class="fa-solid fa-users text-4xl mb-3 text-slate-300"></i>
-                <p>Nessun giocatore presente.<br>Aggiungine uno per iniziare!</p>
+                <i class="fa-solid fa-helmet-safety text-5xl mb-4 text-slate-300"></i>
+                <p class="text-lg">L'arena è vuota.<br>Aggiungi dei combattenti!</p>
             </div>
         </div>
 
@@ -71,142 +116,132 @@
 
     <!-- JavaScript della Logica -->
     <script>
-        // Carica i dati dalla memoria locale o inizia con un array vuoto
-        let players = JSON.parse(localStorage.getItem('app_classifica_dati')) || [];
+        let players = JSON.parse(localStorage.getItem('colosseum_data')) || [];
 
-        // Elementi del DOM
         const form = document.getElementById('add-player-form');
         const inputName = document.getElementById('player-name');
         const leaderboardList = document.getElementById('leaderboard-list');
         const emptyState = document.getElementById('empty-state');
 
-        // Funzione per salvare i dati
         function saveDati() {
-            localStorage.setItem('app_classifica_dati', JSON.stringify(players));
+            localStorage.setItem('colosseum_data', JSON.stringify(players));
         }
 
-        // Funzione per aggiornare l'interfaccia
         function renderClassifica() {
-            // 1. Ordina i giocatori per punteggio (dal più alto al più basso)
             players.sort((a, b) => b.score - a.score);
-
-            // 2. Pulisce la lista
             leaderboardList.innerHTML = '';
 
-            // 3. Mostra/nasconde il messaggio di stato vuoto
             if (players.length === 0) {
                 emptyState.classList.remove('hidden');
             } else {
                 emptyState.classList.add('hidden');
             }
 
-            // 4. Crea l'HTML per ogni giocatore
             players.forEach((player, index) => {
                 const li = document.createElement('li');
-                li.className = 'player-row p-4 flex items-center justify-between gap-3 transition-colors';
+                // Aggiungiamo un ID univoco alla riga HTML per poterla animare in uscita
+                li.id = `row-${player.id}`;
+                li.className = 'player-row bg-white rounded-xl p-3 flex items-center justify-between gap-3 border border-slate-100';
                 
-                // Stili per i primi 3
                 let rankStyle = "bg-slate-100 text-slate-600 font-bold";
-                let rankIcon = `${index + 1}°`;
-                let rowBg = "";
+                let rankIcon = `${index + 1}`;
+                let borderClass = "";
 
                 if (index === 0) {
-                    rankStyle = "bg-yellow-100 text-yellow-600";
-                    rankIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>';
-                    rowBg = "bg-yellow-50/30";
+                    rankStyle = "bg-yellow-500 text-slate-900";
+                    rankIcon = '<i class="fa-solid fa-crown"></i>';
+                    borderClass = "border-yellow-400 shadow-yellow-100";
                 } else if (index === 1) {
-                    rankStyle = "bg-gray-200 text-gray-600";
-                    rankIcon = '<i class="fa-solid fa-medal text-gray-400"></i>';
-                    rowBg = "bg-gray-50/50";
+                    rankStyle = "bg-slate-300 text-slate-700";
+                    borderClass = "border-slate-300";
                 } else if (index === 2) {
-                    rankStyle = "bg-orange-100 text-orange-700";
-                    rankIcon = '<i class="fa-solid fa-medal text-orange-500"></i>';
-                    rowBg = "bg-orange-50/30";
+                    rankStyle = "bg-orange-300 text-orange-800";
+                    borderClass = "border-orange-300";
                 }
 
-                if(rowBg) li.classList.add(...rowBg.split(' '));
+                if(borderClass) li.classList.add(...borderClass.split(' '));
 
                 li.innerHTML = `
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm ${rankStyle}">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm ${rankStyle}">
                             ${rankIcon}
                         </div>
                         <div class="font-bold text-lg truncate">${player.name}</div>
                     </div>
                     
-                    <div class="flex items-center gap-2">
-                        <div class="font-black text-2xl w-12 text-center text-blue-600 mr-2">
+                    <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg">
+                         <button onclick="updateScore('${player.id}', -1)" class="w-10 h-10 rounded-lg text-slate-400 hover:bg-red-100 hover:text-red-600 active:scale-90 flex items-center justify-center text-xl transition">
+                            <i class="fa-solid fa-minus text-sm"></i>
+                        </button>
+
+                        <div id="score-${player.id}" class="font-black text-2xl min-w-[3ch] text-center text-slate-800 mx-1">
                             ${player.score}
                         </div>
                         
-                        <div class="flex flex-col sm:flex-row gap-1">
-                            <button onclick="updateScore('${player.id}', -1)" class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 active:bg-slate-300 flex items-center justify-center text-xl transition">
-                                <i class="fa-solid fa-minus text-sm"></i>
-                            </button>
-                            <button onclick="updateScore('${player.id}', 1)" class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 active:bg-blue-300 flex items-center justify-center text-xl transition">
-                                <i class="fa-solid fa-plus text-sm"></i>
-                            </button>
-                        </div>
-                        
-                        <button onclick="deletePlayer('${player.id}', '${player.name}')" class="w-10 h-10 ml-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 flex items-center justify-center transition">
-                            <i class="fa-regular fa-trash-can"></i>
+                        <button onclick="updateScore('${player.id}', 1)" class="w-10 h-10 rounded-lg bg-slate-900 text-yellow-400 hover:bg-slate-800 active:scale-90 flex items-center justify-center text-xl transition shadow-sm">
+                            <i class="fa-solid fa-plus text-sm"></i>
                         </button>
                     </div>
+                     <button onclick="deletePlayerAnimation('${player.id}')" class="w-10 h-10 ml-1 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 flex items-center justify-center transition">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
                 `;
                 leaderboardList.appendChild(li);
             });
         }
 
-        // Aggiungi un nuovo giocatore
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = inputName.value.trim();
-            
             if (name) {
-                const newPlayer = {
-                    id: Date.now().toString(), // Genera un ID univoco
-                    name: name,
-                    score: 0
-                };
-                
-                players.push(newPlayer);
+                players.push({ id: Date.now().toString(), name: name, score: 0 });
                 saveDati();
                 renderClassifica();
-                inputName.value = ''; // Svuota l'input
+                inputName.value = '';
                 inputName.focus();
             }
         });
 
-        // Aggiorna il punteggio (+1 o -1)
         window.updateScore = function(id, pointsToAdd) {
             const playerIndex = players.findIndex(p => p.id === id);
             if (playerIndex !== -1) {
                 players[playerIndex].score += pointsToAdd;
                 saveDati();
-                renderClassifica(); // Ridisegna la UI per mostrare l'ordinamento in tempo reale
-            }
-        }
-
-        // Elimina un giocatore
-        window.deletePlayer = function(id, name) {
-            if (confirm(`Sei sicuro di voler eliminare ${name}?`)) {
-                players = players.filter(p => p.id !== id);
-                saveDati();
                 renderClassifica();
             }
         }
 
-        // Azzera tutto
+        // Nuova funzione di eliminazione con animazione
+        window.deletePlayerAnimation = function(id) {
+             const player = players.find(p => p.id === id);
+             if (!player) return;
+
+            if (confirm(`Eliminare ${player.name} dall'arena?`)) {
+                // 1. Trova l'elemento HTML della riga
+                const rowEl = document.getElementById(`row-${id}`);
+                if (rowEl) {
+                    // 2. Aggiungi la classe che fa partire l'animazione di uscita
+                    rowEl.classList.add('deleting');
+                    
+                    // 3. Aspetta che l'animazione finisca (400ms come nel CSS) prima di rimuovere i dati
+                    setTimeout(() => {
+                        players = players.filter(p => p.id !== id);
+                        saveDati();
+                        renderClassifica();
+                    }, 400);
+                }
+            }
+        }
+
         window.resetLeaderboard = function() {
             if (players.length === 0) return;
-            if (confirm("Attenzione: Sei sicuro di voler eliminare TUTTI i giocatori e azzerare la classifica?")) {
+            if (confirm("ATTENZIONE: Vuoi davvero azzerare l'intera lega?")) {
                 players = [];
                 saveDati();
                 renderClassifica();
             }
         }
 
-        // Inizializzazione al caricamento della pagina
         renderClassifica();
 
     </script>
